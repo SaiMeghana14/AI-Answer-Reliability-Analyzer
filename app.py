@@ -7,6 +7,8 @@ import tempfile
 
 from utils.generator_basic import generate_basic_answer
 from utils.retriever import get_wiki_data
+from utils.highlighter import highlight_text
+from utils.pdf_export import generate_pdf
 from utils.evaluator import compute_similarity, get_score
 from utils.advanced_eval import detect_hallucinations, explain_winner
 

@@ -1,13 +1,19 @@
-# app.py
-
 import streamlit as st
 import matplotlib.pyplot as plt
+import nltk
+from reportlab.platypus import SimpleDocTemplate, Paragraph
+from reportlab.lib.styles import getSampleStyleSheet
+import tempfile
 
 from utils.generator_basic import generate_basic_answer
 from utils.retriever import get_wiki_data
 from utils.evaluator import compute_similarity, get_score
+from utils.advanced_eval import detect_hallucinations, explain_winner
 
-# Try importing OpenAI generator safely
+# Download tokenizer
+nltk.download('punkt')
+
+# Safe OpenAI import
 try:
     from utils.generator_openai import generate_openai_answer
     openai_available = True
@@ -15,57 +21,93 @@ except:
     openai_available = False
 
 
-# ------------------ PAGE CONFIG ------------------
+# ------------------ CONFIG ------------------
 st.set_page_config(page_title="AI Reliability Battle", layout="wide")
 
 st.title("⚔️ AI vs AI Reliability Battle Arena")
-st.write("Compare AI-generated answers using real-world data (Wikipedia).")
+
+
+# ------------------ GAUGE ------------------
+def show_gauge(score, title):
+    fig, ax = plt.subplots()
+    ax.barh([0], [score])
+    ax.set_xlim(0, 100)
+    ax.set_title(title)
+    ax.set_yticks([])
+    st.pyplot(fig)
+
+
+# ------------------ HIGHLIGHT FUNCTION ------------------
+def highlight_text(text, hallucinations):
+    highlighted = ""
+    for item in hallucinations:
+        sentence = item["sentence"]
+        if item["hallucinated"]:
+            highlighted += f"❌ {sentence}\n\n"
+        else:
+            highlighted += f"✅ {sentence}\n\n"
+    return highlighted
+
+
+# ------------------ PDF EXPORT ------------------
+def generate_pdf(question, basic_ans, openai_ans, score_basic, score_openai):
+    temp_file = tempfile.NamedTemporaryFile(delete=False, suffix=".pdf")
+    doc = SimpleDocTemplate(temp_file.name)
+    styles = getSampleStyleSheet()
+
+    content = []
+
+    content.append(Paragraph(f"<b>Question:</b> {question}", styles["Normal"]))
+    content.append(Paragraph(f"<b>Basic AI Answer:</b> {basic_ans}", styles["Normal"]))
+    content.append(Paragraph(f"<b>OpenAI Answer:</b> {openai_ans}", styles["Normal"]))
+    content.append(Paragraph(f"<b>Basic Score:</b> {score_basic}", styles["Normal"]))
+    content.append(Paragraph(f"<b>OpenAI Score:</b> {score_openai}", styles["Normal"]))
+
+    doc.build(content)
+    return temp_file.name
 
 
 # ------------------ INPUT ------------------
 question = st.text_input("🔍 Enter your question:")
 
 
-# ------------------ CACHE (PREVENT RATE LIMIT) ------------------
+# ------------------ CACHE ------------------
 @st.cache_data
-def get_openai_cached(question):
-    return generate_openai_answer(question)
+def get_openai_cached(q):
+    return generate_openai_answer(q)
 
 
-# ------------------ MAIN LOGIC ------------------
+# ------------------ MAIN ------------------
 if st.button("Analyze") and question:
 
-    with st.spinner("Analyzing responses..."):
+    with st.spinner("Analyzing..."):
 
-        # ✅ Basic AI (always works)
         basic_answer = generate_basic_answer(question)
 
-        # ✅ OpenAI (safe handling)
         if openai_available:
             try:
                 openai_answer = get_openai_cached(question)
-
-                # Fallback if rate limit message appears
                 if "rate limit" in openai_answer.lower():
-                    openai_answer = basic_answer + " (Fallback due to API limit)"
-
-            except Exception:
-                openai_answer = basic_answer + " (Fallback: OpenAI failed)"
+                    openai_answer = basic_answer + " (Fallback)"
+            except:
+                openai_answer = basic_answer + " (Fallback)"
         else:
             openai_answer = basic_answer + " (OpenAI not available)"
 
-        # ✅ Retrieve ground truth
         real_data = get_wiki_data(question)
 
-        # ✅ Evaluate both
+        # Scores
         sim_basic = compute_similarity(basic_answer, real_data)
         sim_openai = compute_similarity(openai_answer, real_data)
 
         score_basic, conf_basic = get_score(sim_basic)
         score_openai, conf_openai = get_score(sim_openai)
 
-    # ------------------ DISPLAY ------------------
+        # Hallucination detection
+        hall_basic = detect_hallucinations(basic_answer, real_data)
+        hall_openai = detect_hallucinations(openai_answer, real_data)
 
+    # ------------------ DISPLAY ------------------
     col1, col2 = st.columns(2)
 
     with col1:
@@ -75,47 +117,71 @@ if st.button("Analyze") and question:
         st.write(conf_basic)
 
     with col2:
-        st.subheader("🧠 Advanced AI (OpenAI)")
+        st.subheader("🧠 OpenAI")
         st.write(openai_answer)
         st.metric("Score", f"{score_openai}%")
         st.write(conf_openai)
 
     st.divider()
 
-    st.subheader("📚 Ground Truth (Wikipedia)")
+    st.subheader("📚 Ground Truth")
     st.write(real_data)
 
     st.divider()
 
-    # ------------------ WINNER ------------------
-    if score_openai > score_basic:
-        st.success("🏆 Advanced AI (OpenAI) is more reliable!")
-    elif score_basic > score_openai:
-        st.success("🏆 Basic AI wins (unexpected!)")
-    else:
-        st.info("🤝 It's a tie!")
+    # Winner
+    winner, reason = explain_winner(score_basic, score_openai)
 
-    # ------------------ GRAPH ------------------
-    st.subheader("📊 Reliability Comparison")
+    st.subheader("🏆 Winner")
+    st.success(f"{winner}")
 
-    models = ["Basic AI", "OpenAI"]
-    scores = [score_basic, score_openai]
-
-    fig, ax = plt.subplots()
-    ax.bar(models, scores)
-    ax.set_ylabel("Accuracy Score")
-    ax.set_title("AI Reliability Comparison")
-
-    st.pyplot(fig)
+    st.subheader("🧠 Why This Model Won")
+    st.write(reason)
 
     st.divider()
 
-    # ------------------ FINAL VERDICT ------------------
-    st.subheader("🧠 Final Verdict")
+    # Gauge
+    st.subheader("🎯 Trust Score Gauges")
 
-    if score_openai > 75 or score_basic > 75:
-        st.success("High reliability detected in at least one model.")
-    elif score_openai > 50 or score_basic > 50:
-        st.warning("Moderate reliability. Some gaps exist.")
-    else:
-        st.error("Low reliability. Possible hallucinations detected.")
+    col3, col4 = st.columns(2)
+    with col3:
+        show_gauge(score_basic, "Basic AI Trust")
+
+    with col4:
+        show_gauge(score_openai, "OpenAI Trust")
+
+    st.divider()
+
+    # Sentence analysis
+    st.subheader("🔍 Sentence-Level Hallucination Detection")
+
+    col5, col6 = st.columns(2)
+
+    with col5:
+        st.write("### 🤖 Basic AI")
+        st.text(highlight_text(basic_answer, hall_basic))
+
+    with col6:
+        st.write("### 🧠 OpenAI")
+        st.text(highlight_text(openai_answer, hall_openai))
+
+    st.divider()
+
+    # PDF Export
+    st.subheader("📄 Export Report")
+
+    pdf_file = generate_pdf(
+        question,
+        basic_answer,
+        openai_answer,
+        score_basic,
+        score_openai
+    )
+
+    with open(pdf_file, "rb") as f:
+        st.download_button(
+            label="📥 Download PDF Report",
+            data=f,
+            file_name="ai_reliability_report.pdf",
+            mime="application/pdf"
+        )

@@ -1,6 +1,5 @@
 import streamlit as st
 import matplotlib.pyplot as plt
-import nltk
 from reportlab.platypus import SimpleDocTemplate, Paragraph
 from reportlab.lib.styles import getSampleStyleSheet
 import tempfile
@@ -11,9 +10,6 @@ from utils.highlighter import highlight_text
 from utils.pdf_export import generate_pdf
 from utils.evaluator import compute_similarity, get_score
 from utils.advanced_eval import detect_hallucinations, explain_winner
-
-# Download tokenizer
-nltk.download('punkt')
 
 # Safe OpenAI import
 try:

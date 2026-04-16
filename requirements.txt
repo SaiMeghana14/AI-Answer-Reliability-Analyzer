@@ -1,7 +1,6 @@
 streamlit
 wikipedia
 scikit-learn
-nltk
 openai
 matplotlib
 reportlab

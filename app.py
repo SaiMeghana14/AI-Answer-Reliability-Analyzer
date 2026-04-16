@@ -1,73 +1,73 @@
 import streamlit as st
-from utils.generator import generate_answer
+import matplotlib.pyplot as plt
+
+from utils.generator_basic import generate_basic_answer
+from utils.generator_openai import generate_openai_answer
 from utils.retriever import get_wiki_data
 from utils.evaluator import compute_similarity, get_score
-from utils.highlighter import find_missing_info, find_overlap
 
-st.set_page_config(page_title="AI Reliability Analyzer", layout="wide")
+st.set_page_config(page_title="AI Battle Arena", layout="wide")
 
-st.title("🧠 AI Answer Reliability Analyzer")
-st.write("Evaluate AI-generated answers using real-world data (Wikipedia).")
+st.title("⚔️ AI vs AI Reliability Battle Arena")
+st.write("Compare AI models based on factual accuracy using real-world data.")
 
 question = st.text_input("🔍 Enter your question:")
 
 if st.button("Analyze") and question:
 
-    # Step 1: Generate AI Answer
-    ai_answer = generate_answer(question)
+    # Generate answers
+    basic_answer = generate_basic_answer(question)
+    openai_answer = generate_openai_answer(question)
 
-    # Step 2: Retrieve Real Data
+    # Retrieve truth data
     real_data = get_wiki_data(question)
 
-    # Step 3: Evaluate
-    similarity = compute_similarity(ai_answer, real_data)
-    score, confidence = get_score(similarity)
+    # Evaluate both
+    sim_basic = compute_similarity(basic_answer, real_data)
+    sim_openai = compute_similarity(openai_answer, real_data)
 
-    # Step 4: Highlights
-    missing = find_missing_info(ai_answer, real_data)
-    overlap = find_overlap(ai_answer, real_data)
+    score_basic, conf_basic = get_score(sim_basic)
+    score_openai, conf_openai = get_score(sim_openai)
 
     # Layout
     col1, col2 = st.columns(2)
 
     with col1:
-        st.subheader("🤖 AI Answer")
-        st.write(ai_answer)
+        st.subheader("🤖 Basic AI")
+        st.write(basic_answer)
+        st.metric("Score", f"{score_basic}%")
+        st.write(conf_basic)
 
     with col2:
-        st.subheader("📚 Retrieved Data (Wikipedia)")
-        st.write(real_data)
+        st.subheader("🧠 Advanced AI (OpenAI)")
+        st.write(openai_answer)
+        st.metric("Score", f"{score_openai}%")
+        st.write(conf_openai)
 
     st.divider()
 
-    # Score Section
-    st.subheader("📊 Evaluation Results")
-
-    col3, col4 = st.columns(2)
-
-    with col3:
-        st.metric("Accuracy Score", f"{score}%")
-
-    with col4:
-        st.write(f"### {confidence}")
+    st.subheader("📚 Ground Truth (Wikipedia)")
+    st.write(real_data)
 
     st.divider()
 
-    # Insights
-    st.subheader("🔎 Analysis Insights")
-
-    st.write("**✅ Overlapping Concepts:**")
-    st.write(overlap)
-
-    st.write("**⚠️ Missing Concepts:**")
-    st.write(missing)
-
-    st.divider()
-
-    # Final Verdict
-    if score > 75:
-        st.success("AI answer is highly reliable.")
-    elif score > 50:
-        st.warning("AI answer is partially reliable.")
+    # 🏆 Winner Logic
+    if score_openai > score_basic:
+        st.success("🏆 OpenAI model is more reliable!")
+    elif score_basic > score_openai:
+        st.success("🏆 Basic model wins (unexpected!)")
     else:
-        st.error("AI answer may be unreliable or hallucinated.")
+        st.info("🤝 It's a tie!")
+
+    # 📊 GRAPH (IMPORTANT)
+    st.subheader("📊 Reliability Comparison")
+
+    models = ["Basic AI", "OpenAI"]
+    scores = [score_basic, score_openai]
+
+    fig, ax = plt.subplots()
+    ax.bar(models, scores)
+    ax.set_ylabel("Accuracy Score")
+    ax.set_title("AI Reliability Comparison")
+
+    st.pyplot(fig)

@@ -1,10 +1,14 @@
-import openai
+from openai import OpenAI
+import os
 
-openai.api_key = "YOUR_API_KEY"
+client = OpenAI(api_key=os.getenv("OPENAI_API_KEY"))
 
 def generate_openai_answer(question):
-    response = openai.ChatCompletion.create(
+    response = client.chat.completions.create(
         model="gpt-4o-mini",
-        messages=[{"role": "user", "content": question}]
+        messages=[
+            {"role": "user", "content": question}
+        ]
     )
-    return response['choices'][0]['message']['content']
+    
+    return response.choices[0].message.content

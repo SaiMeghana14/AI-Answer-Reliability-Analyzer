@@ -97,8 +97,8 @@ if st.button("Analyze") and question:
                 openai_answer = "⚠️ OpenAI failed. Using fallback."
                 use_openai_for_eval = False
             else:
-            openai_answer = "⚠️ OpenAI not available."
-            use_openai_for_eval = False
+                openai_answer = "⚠️ OpenAI not available."
+                use_openai_for_eval = False
 
         real_data = get_wiki_data(question)
 

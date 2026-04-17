@@ -83,27 +83,39 @@ if st.button("Analyze") and question:
         basic_answer = generate_basic_answer(question)
 
         if openai_available:
-            try:
-                openai_answer = get_openai_cached(question)
-                if "rate limit" in openai_answer.lower():
-                    openai_answer = basic_answer + " (Fallback)"
-            except:
-                openai_answer = basic_answer + " (Fallback)"
+        try:
+            openai_answer = get_openai_cached(question)
+    
+            # Detect API error response
+            if "error" in openai_answer.lower() or "quota" in openai_answer.lower():
+                openai_answer = "⚠️ OpenAI unavailable. Using fallback model."
+                use_openai_for_eval = False
+            else:
+                use_openai_for_eval = True
+    
+        except:
+            openai_answer = "⚠️ OpenAI failed. Using fallback."
+            use_openai_for_eval = False
         else:
-            openai_answer = basic_answer + " (OpenAI not available)"
+        openai_answer = "⚠️ OpenAI not available."
+        use_openai_for_eval = False
 
         real_data = get_wiki_data(question)
 
         # Scores
         sim_basic = compute_similarity(basic_answer, real_data)
-        sim_openai = compute_similarity(openai_answer, real_data)
-
         score_basic, conf_basic = get_score(sim_basic)
-        score_openai, conf_openai = get_score(sim_openai)
-
+        
         # Hallucination detection
         hall_basic = detect_hallucinations(basic_answer, real_data)
-        hall_openai = detect_hallucinations(openai_answer, real_data)
+                                           
+        if use_openai_for_eval:
+            sim_openai = compute_similarity(openai_answer, real_data)
+            score_openai, conf_openai = get_score(sim_openai)
+            hall_openai = detect_hallucinations(openai_answer, real_data)
+        else:
+            score_openai, conf_openai = 0, "Unavailable"
+            hall_openai = []
 
     # ------------------ DISPLAY ------------------
     col1, col2 = st.columns(2)
@@ -116,9 +128,13 @@ if st.button("Analyze") and question:
 
     with col2:
         st.subheader("🧠 OpenAI")
-        st.write(openai_answer)
-        st.metric("Score", f"{score_openai}%")
-        st.write(conf_openai)
+    
+        if use_openai_for_eval:
+            st.write(openai_answer)
+            st.metric("Score", f"{score_openai}%")
+            st.write(conf_openai)
+        else:
+            st.warning("⚠️ OpenAI response unavailable (quota exceeded)")
 
     st.divider()
 
@@ -161,7 +177,11 @@ if st.button("Analyze") and question:
 
     with col6:
         st.write("### 🧠 OpenAI")
-        st.text(highlight_text(openai_answer, hall_openai))
+    
+        if use_openai_for_eval:
+            st.text(highlight_text(hall_openai))
+        else:
+            st.info("No analysis available")
 
     st.divider()
 

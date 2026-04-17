@@ -83,22 +83,22 @@ if st.button("Analyze") and question:
         basic_answer = generate_basic_answer(question)
 
         if openai_available:
-        try:
-            openai_answer = get_openai_cached(question)
-    
-            # Detect API error response
-            if "error" in openai_answer.lower() or "quota" in openai_answer.lower():
-                openai_answer = "⚠️ OpenAI unavailable. Using fallback model."
+            try:
+                openai_answer = get_openai_cached(question)
+        
+                # Detect API error response
+                if "error" in openai_answer.lower() or "quota" in openai_answer.lower():
+                    openai_answer = "⚠️ OpenAI unavailable. Using fallback model."
+                    use_openai_for_eval = False
+                else:
+                    use_openai_for_eval = True
+        
+            except:
+                openai_answer = "⚠️ OpenAI failed. Using fallback."
                 use_openai_for_eval = False
             else:
-                use_openai_for_eval = True
-    
-        except:
-            openai_answer = "⚠️ OpenAI failed. Using fallback."
+            openai_answer = "⚠️ OpenAI not available."
             use_openai_for_eval = False
-        else:
-        openai_answer = "⚠️ OpenAI not available."
-        use_openai_for_eval = False
 
         real_data = get_wiki_data(question)
 

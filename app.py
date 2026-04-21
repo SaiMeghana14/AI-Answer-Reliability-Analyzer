@@ -1,224 +1,350 @@
 import streamlit as st
 import matplotlib.pyplot as plt
-import requests
 import re
 
 from utils.generator_basic import generate_basic_answer
-from utils.evaluator import compute_similarity, get_score
 from utils.pdf_export import generate_pdf
-from utils.advanced_eval import detect_hallucinations, explain_winner
+from utils.advanced_scoring import reliability_score
+from utils.multi_retrieval import retrieve_all, source_agreement
+from utils.claim_checker import check_claims
+from utils.adversarial_tests import detect_false_premise
+from utils.benchmark import benchmark_questions
 
 
-# ------------------ CONFIG ------------------
-st.set_page_config(page_title="AI Reliability Battle", layout="wide")
+# ---------------- CONFIG ----------------
 
-st.title("⚔️ AI Reliability Battle: Baseline vs Retrieval AI")
+st.set_page_config(
+    page_title="TrustEval",
+    layout="wide"
+)
 
-
-# ------------------ MULTI-SOURCE RETRIEVAL ------------------
-
-def get_wikipedia_data(query):
-    try:
-        import wikipedia
-        return wikipedia.summary(query, sentences=3), "Wikipedia"
-    except:
-        return "", "Wikipedia"
+st.title("🧠 TrustEval: Reliability Analysis of AI Answers")
 
 
-def get_duckduckgo_data(query):
-    try:
-        url = f"https://api.duckduckgo.com/?q={query}&format=json"
+# ---------------- HELPERS ----------------
 
-        response = requests.get(url, timeout=5)
-        data = response.json()
+def combine_sources_text(sources):
+    text = " ".join(
+        v for v in sources.values()
+        if v and len(v.strip()) > 0
+    )
 
-        text = (
-            data.get("AbstractText")
-            or (
-                data.get("RelatedTopics", [{}])[0].get("Text", "")
-                if data.get("RelatedTopics")
-                else ""
-            )
+    if not text:
+        text = "No reliable data found."
+
+    return text
+
+
+def source_links(query, sources):
+
+    links=[]
+
+    if sources["wiki"]:
+        links.append(
+            ("Wikipedia",
+             f"https://en.wikipedia.org/wiki/{query.replace(' ','_')}")
         )
 
-        return text, "DuckDuckGo"
-
-    except Exception:
-        return "", "DuckDuckGo"
-
-
-def get_combined_data(query):
-
-    wiki_data, _ = get_wikipedia_data(query)
-    ddg_data, _ = get_duckduckgo_data(query)
-
-    combined = f"{wiki_data} {ddg_data}".strip()
-
-    sources = []
-
-    if wiki_data:
-        sources.append(
-            (
-                "Wikipedia",
-                f"https://en.wikipedia.org/wiki/{query.replace(' ', '_')}"
-            )
+    if sources["duck"]:
+        links.append(
+            ("DuckDuckGo",
+             f"https://duckduckgo.com/?q={query}")
         )
 
-    if ddg_data:
-        sources.append(
-            (
-                "DuckDuckGo",
-                f"https://duckduckgo.com/?q={query}"
-            )
-        )
+    return links
 
-    if not combined:
-        combined = "No reliable data found."
-
-    return combined, sources
-
-# ------------------ RETRIEVAL AI ------------------
 
 def generate_retrieval_answer(question):
-    data, _ = get_combined_data(question)
-    return f"Based on reliable sources: {data}"
+    sources = retrieve_all(question)
+    text = combine_sources_text(sources)
 
+    return f"Based on reliable sources: {text}"
 
-# ------------------ WORD-LEVEL HIGHLIGHT ------------------
 
 def highlight_words(answer, reference):
-    answer_words = answer.split()
-    ref_words = set(reference.lower().split())
 
-    highlighted = ""
+    answer_words=answer.split()
+    ref_words=set(reference.lower().split())
 
-    for word in answer_words:
-        clean_word = re.sub(r'[^\w]', '', word.lower())
+    out=""
 
-        if clean_word in ref_words:
-            highlighted += f"✅ {word} "
+    for w in answer_words:
+
+        clean=re.sub(r"[^\w]","",w.lower())
+
+        if clean in ref_words:
+            out += f"✅ {w} "
         else:
-            highlighted += f"❌ {word} "
+            out += f"❌ {w} "
 
-    return highlighted
+    return out
 
-# ------------------ GAUGE ------------------
 
-def show_gauge(score, title):
-    fig, ax = plt.subplots()
-    ax.barh([0], [score])
-    ax.set_xlim(0, 100)
+def show_gauge(score,title):
+
+    fig,ax=plt.subplots()
+
+    ax.barh([0],[score])
+
+    ax.set_xlim(0,100)
+
     ax.set_title(title)
+
     ax.set_yticks([])
+
     st.pyplot(fig)
 
 
-# ------------------ INPUT ------------------
+# ---------------- INPUT ----------------
 
-question = st.text_input("🔍 Enter your question:")
+question = st.text_input(
+    "🔍 Ask a question:"
+)
 
 
-# ------------------ MAIN ------------------
+# ---------------- ADVERSARIAL CHECK ----------------
+
+if question and detect_false_premise(question):
+
+    st.error(
+      "⚠ False premise detected. This question may be invalid or misleading."
+    )
+
+
+# ---------------- ANALYZE ----------------
 
 if st.button("Analyze") and question:
 
-    # Generate answers
+    # ---------------- ANSWERS ----------------
+
     basic_answer = generate_basic_answer(question)
+
     retrieval_answer = generate_retrieval_answer(question)
 
-    # Get ground truth
-    real_data, sources = get_combined_data(question)
+    # ---------------- RETRIEVAL ----------------
 
-    # Scores
-    sim_basic = compute_similarity(basic_answer, real_data)
-    sim_retrieval = compute_similarity(retrieval_answer, real_data)
+    sources = retrieve_all(question)
 
-    score_basic, conf_basic = get_score(sim_basic)
-    score_retrieval, conf_retrieval = get_score(sim_retrieval)
+    reference_text = combine_sources_text(sources)
 
-    # Winner
-    winner, reason = explain_winner(score_basic, score_retrieval,
-                                    "Baseline AI", "Retrieval AI")
+    confidence = source_agreement(sources)
 
-     # ------------------ DISPLAY ------------------
+    # ---------------- RELIABILITY SCORING ----------------
 
-    col1, col2 = st.columns(2)
+    score_basic = reliability_score(
+        basic_answer,
+        reference_text
+    )
+
+    score_retrieval = reliability_score(
+        retrieval_answer,
+        reference_text
+    )
+
+    # ---------------- WINNER ----------------
+
+    if score_retrieval > score_basic:
+        winner="Retrieval AI"
+        reason="Higher factual overlap and stronger source grounding."
+
+    else:
+        winner="Baseline AI"
+        reason="Unexpectedly stronger alignment on this query."
+
+    # ---------------- DISPLAY ----------------
+
+    col1,col2 = st.columns(2)
 
     with col1:
-        st.subheader("🤖 Baseline AI (Ungrounded)")
-        st.write(basic_answer)
-        st.metric("Score", f"{score_basic}%")
-        st.write(conf_basic)
+
+        st.subheader(
+            "🤖 Baseline AI"
+        )
+
+        st.write(
+            basic_answer
+        )
+
+        st.metric(
+            "Reliability Score",
+            f"{score_basic:.2f}%"
+        )
 
     with col2:
-        st.subheader("🌐 Retrieval AI (Knowledge-Grounded)")
-        st.write(retrieval_answer)
-        st.metric("Score", f"{score_retrieval}%")
-        st.write(conf_retrieval)
+
+        st.subheader(
+            "🌐 Retrieval AI"
+        )
+
+        st.write(
+            retrieval_answer
+        )
+
+        st.metric(
+            "Reliability Score",
+            f"{score_retrieval:.2f}%"
+        )
 
     st.divider()
 
-    # Ground truth
-    st.subheader("📚 Ground Truth (Multi-Source)")
-    st.write(real_data)
+    # ---------------- SOURCE AGREEMENT ----------------
 
-    st.write("🔗 Sources:")
-    for name, link in sources:
-        st.markdown(f"- [{name}]({link})")
+    st.subheader(
+        "📚 Source Agreement"
+    )
 
-    st.divider()
+    st.write(
+        f"Confidence: **{confidence}**"
+    )
 
-    # Winner
-    st.subheader("🏆 Winner")
-    st.success(winner)
+    st.write(
+        "Sources:"
+    )
 
-    st.subheader("🧠 Why This Model Won")
-    st.write(reason)
-
-    st.divider()
-
-    # Gauges
-    st.subheader("🎯 Trust Score Gauges")
-
-    col3, col4 = st.columns(2)
-
-    with col3:
-        show_gauge(score_basic, "Baseline AI Trust")
-
-    with col4:
-        show_gauge(score_retrieval, "Retrieval AI Trust")
+    for name,link in source_links(
+        question,
+        sources
+    ):
+        st.markdown(
+          f"- [{name}]({link})"
+        )
 
     st.divider()
 
-    # Word-level highlighting
-    st.subheader("🔍 Word-Level Hallucination Detection")
+    # ---------------- WINNER EXPLANATION ----------------
 
-    col5, col6 = st.columns(2)
+    st.subheader(
+        "🏆 Winner"
+    )
 
-    with col5:
-        st.write("### 🤖 Baseline AI")
-        st.write(highlight_words(basic_answer, real_data))
+    st.success(
+        winner
+    )
 
-    with col6:
-        st.write("### 🌐 Retrieval AI")
-        st.write(highlight_words(retrieval_answer, real_data))
+    st.write(
+        reason
+    )
+
     st.divider()
 
-    # PDF Export
-    st.subheader("📄 Export Report")
+    # ---------------- TRUST GAUGES ----------------
+
+    st.subheader(
+        "🎯 Trust Score Gauges"
+    )
+
+    c3,c4=st.columns(2)
+
+    with c3:
+        show_gauge(
+            score_basic,
+            "Baseline Trust"
+        )
+
+    with c4:
+        show_gauge(
+            score_retrieval,
+            "Retrieval Trust"
+        )
+
+    st.divider()
+
+    # ---------------- WORD HIGHLIGHT ----------------
+
+    st.subheader(
+        "🔍 Word-Level Hallucination Detection"
+    )
+
+    c5,c6=st.columns(2)
+
+    with c5:
+
+        st.write(
+            highlight_words(
+                basic_answer,
+                reference_text
+            )
+        )
+
+    with c6:
+
+        st.write(
+            highlight_words(
+                retrieval_answer,
+                reference_text
+            )
+        )
+
+    st.divider()
+
+    # ---------------- CLAIM CHECKING ----------------
+
+    st.subheader(
+        "🧠 Claim-by-Claim Verification"
+    )
+
+    claims = check_claims(
+        retrieval_answer,
+        reference_text
+    )
+
+    for claim,label in claims:
+
+        st.write(
+            f"- {claim} → {label}"
+        )
+
+    st.divider()
+
+    # ---------------- PDF REPORT ----------------
+
+    st.subheader(
+        "📄 Export Report"
+    )
 
     pdf_file = generate_pdf(
         question,
         basic_answer,
         retrieval_answer,
-        score_basic,
-        score_retrieval
+        round(score_basic,2),
+        round(score_retrieval,2)
     )
 
-    with open(pdf_file, "rb") as f:
+    with open(
+        pdf_file,
+        "rb"
+    ) as f:
+
         st.download_button(
             label="📥 Download PDF Report",
             data=f,
-            file_name="ai_reliability_report.pdf",
+            file_name="TrustEval_Report.pdf",
             mime="application/pdf"
         )
+
+
+# ---------------- BENCHMARK MODE ----------------
+
+st.divider()
+
+st.subheader(
+    "📊 Benchmark Mode"
+)
+
+if st.button(
+    "Run Benchmark"
+):
+
+    tests=benchmark_questions()
+
+    for q,truth in tests:
+
+        st.write(
+            f"Q: {q}"
+        )
+
+        st.write(
+            f"Expected: {truth}"
+        )
+
+        st.write("---")

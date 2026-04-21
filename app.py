@@ -25,9 +25,10 @@ def get_wikipedia_data(query):
         return "", "Wikipedia"
 
 
- def get_duckduckgo_data(query):
-     try:
+def get_duckduckgo_data(query):
+    try:
         url = f"https://api.duckduckgo.com/?q={query}&format=json"
+
         response = requests.get(url, timeout=5)
         data = response.json()
 
@@ -45,30 +46,36 @@ def get_wikipedia_data(query):
     except Exception:
         return "", "DuckDuckGo"
 
- def get_combined_data(query):
-     wiki_data, _ = get_wikipedia_data(query)
-     ddg_data, _ = get_duckduckgo_data(query)
-     combined = f"{wiki_data} {ddg_data}".strip()
-     
-     sources = []
-     
-     if wiki_data:
-         sources.append(
-            ("Wikipedia",
-             f"https://en.wikipedia.org/wiki/{query.replace(' ', '_')}")
-        )
-         
-     if ddg_data:
-        sources.append(
-            ("DuckDuckGo",
-             f"https://duckduckgo.com/?q={query}")
-        )
-         
-     if not combined:
-        combined = "No reliable data found."
-         
-     return combined, sources
 
+def get_combined_data(query):
+
+    wiki_data, _ = get_wikipedia_data(query)
+    ddg_data, _ = get_duckduckgo_data(query)
+
+    combined = f"{wiki_data} {ddg_data}".strip()
+
+    sources = []
+
+    if wiki_data:
+        sources.append(
+            (
+                "Wikipedia",
+                f"https://en.wikipedia.org/wiki/{query.replace(' ', '_')}"
+            )
+        )
+
+    if ddg_data:
+        sources.append(
+            (
+                "DuckDuckGo",
+                f"https://duckduckgo.com/?q={query}"
+            )
+        )
+
+    if not combined:
+        combined = "No reliable data found."
+
+    return combined, sources
 
 # ------------------ RETRIEVAL AI ------------------
 

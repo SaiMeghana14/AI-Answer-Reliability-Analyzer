@@ -1,6 +1,6 @@
 streamlit
 wikipedia
 scikit-learn
-openai
 matplotlib
 reportlab
+requests

@@ -19,6 +19,8 @@ from utils.benchmark_runner import BenchmarkRunner
 
 from utils.charts import radar
 
+st.write("Secrets loaded:", "GEMINI_API_KEY" in st.secrets)
+st.write(st.secrets["GEMINI_API_KEY"][:10])
 
 st.set_page_config(
     page_title="TrustEval",

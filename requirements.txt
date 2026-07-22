@@ -1,6 +1,8 @@
 streamlit
-wikipedia
-scikit-learn
+pandas
+numpy
 matplotlib
+scikit-learn
+wikipediarequests
 reportlab
-requests
+google-genai

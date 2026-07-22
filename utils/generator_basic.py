@@ -1,6 +1,20 @@
+from google import genai
+
+client = genai.Client(api_key="YOUR_API_KEY")
+
+
 def generate_basic_answer(question):
-    return f"""
-Technology provides several advantages including improved efficiency, faster communication, and automation of tasks.
-It enables access to information, enhances productivity, and supports innovation in fields like healthcare and education.
-However, it may also have drawbacks such as dependency and privacy concerns.
+    prompt = f"""
+Answer the following question using only your own knowledge.
+Do not search the web or use external sources.
+
+Question:
+{question}
 """
+
+    response = client.models.generate_content(
+        model="gemini-2.5-flash",
+        contents=prompt
+    )
+
+    return response.text

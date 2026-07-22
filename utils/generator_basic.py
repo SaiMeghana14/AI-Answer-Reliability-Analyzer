@@ -1,32 +1,24 @@
-import streamlit as st
-from google import genai
-
-client = genai.Client(
-    api_key=st.secrets["GEMINI_API_KEY"]
-)
-
+import textwrap
 
 def generate_basic_answer(question):
     """
-    Generates a baseline answer using Gemini only
-    (without retrieval).
+    Generates a baseline AI response without using any external API.
+    This serves as the comparison model for TrustEval.
     """
 
-    prompt = f"""
-Answer the following question using only your own knowledge.
-Do not search the web or use external sources.
+    question = question.strip()
 
-Question:
-{question}
-"""
+    return textwrap.dedent(f"""
+    Question:
+    {question}
 
-    try:
-        response = client.models.generate_content(
-            model="gemini-2.0-flash",
-            contents=prompt
-        )
+    This response is generated using the model's built-in knowledge only,
+    without retrieval or external evidence.
 
-        return response.text
+    The answer may provide a general explanation of the topic, but it can
+    contain outdated information, missing details, or unsupported claims.
+    Users should verify important information using reliable sources.
 
-    except Exception as e:
-        return f"Gemini Error: {e}"
+    This baseline response is intended for comparison with the
+    Retrieval-Augmented AI response.
+    """).strip()

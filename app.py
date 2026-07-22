@@ -19,63 +19,136 @@ from utils.benchmark_runner import BenchmarkRunner
 
 from utils.charts import radar
 
-st.write("Secrets loaded:", "GEMINI_API_KEY" in st.secrets)
-st.write(st.secrets["GEMINI_API_KEY"][:10])
-
 st.set_page_config(
     page_title="TrustEval",
     page_icon="🧠",
     layout="wide"
 )
 
+st.markdown("""
+<style>
+
+/* Sidebar */
+section[data-testid="stSidebar"]{
+    background: #F8FAFC;
+    border-right: 1px solid #E5E7EB;
+}
+
+/* Metric Cards */
+[data-testid="metric-container"]{
+    background: white;
+    border: 1px solid #E5E7EB;
+    padding: 10px;
+    border-radius: 10px;
+}
+
+/* Divider */
+hr{
+    margin-top:0.6rem;
+    margin-bottom:0.6rem;
+}
+
+/* Reduce top padding */
+.block-container{
+    padding-top:2rem;
+}
+
+</style>
+""", unsafe_allow_html=True)
+
+# ==========================================================
+# SIDEBAR
+# ==========================================================
+
 with st.sidebar:
 
-    st.title("🧠 TrustEval")
+    st.markdown("## 🧠 TrustEval")
+    st.caption("AI Answer Reliability Framework")
 
-    st.write("""
-AI Answer Reliability Framework
+    st.divider()
 
-Version 2.0
+    st.markdown("### 🚀 Version")
+    st.success("v2.0")
+
+    st.divider()
+
+    st.markdown("### 📊 Evaluation Modules")
+
+    st.markdown("🟢 Semantic Similarity")
+    st.markdown("🟢 Citation Support")
+    st.markdown("🟢 Entity Consistency")
+    st.markdown("🟢 Claim Verification")
+    st.markdown("🟢 Source Agreement")
+    st.markdown("🟢 Contradiction Detection")
+
+    st.divider()
+
+    st.markdown("### 📈 Framework")
+
+    c1, c2 = st.columns(2)
+
+    with c1:
+        st.metric("Modules", "6")
+
+    with c2:
+        st.metric("Status", "Ready")
+
+    st.divider()
+
+    st.markdown("### 🛠 Powered By")
+
+    st.markdown("""
+- Streamlit
+- Scikit-Learn
+- Wikipedia API
+- Matplotlib
 """)
 
     st.divider()
 
-    st.subheader("Evaluation Modules")
+    st.caption("🧪 Research Prototype")
+    
+# ==========================================================
+# HOME
+# ==========================================================
 
-    st.checkbox("Semantic Similarity", True)
-    st.checkbox("Citation Support", True)
-    st.checkbox("Entity Consistency", True)
-    st.checkbox("Claim Verification", True)
-    st.checkbox("Source Agreement", True)
-    st.checkbox("Contradiction Detection", True)
+st.title("🧠 TrustEval")
 
-    st.divider()
+st.subheader("AI Answer Reliability Evaluation Framework")
 
-    st.caption(
-        "Research Prototype"
-    )
-
-st.markdown(
-"""
-# 🧠 TrustEval
-
-### AI Answer Reliability Evaluation Framework
-
-Compare baseline AI answers with retrieval-grounded answers using:
-
-- Semantic Similarity
-- Citation Support
-- Entity Consistency
-- Contradiction Detection
-- Claim Verification
-"""
+st.write(
+    "Evaluate AI responses by comparing baseline answers with "
+    "retrieval-grounded evidence and reliability metrics."
 )
 
-st.subheader("Ask a Question")
+st.divider()
+
+c1, c2 = st.columns(2)
+
+with c1:
+    st.success("✔ Semantic Similarity")
+    st.success("✔ Citation Support")
+    st.success("✔ Entity Consistency")
+
+with c2:
+    st.success("✔ Claim Verification")
+    st.success("✔ Source Agreement")
+    st.success("✔ Contradiction Detection")
+
+st.divider()
+
+m1, m2, m3 = st.columns(3)
+
+m1.metric("Evaluation Metrics", "6")
+m2.metric("Framework Version", "2.0")
+m3.metric("Status", "Ready")
+
+st.markdown("## 🔍 Ask a Question")
 
 question = st.text_input(
-    "",
-    placeholder="Example: What is Artificial Intelligence?"
+    "Enter your question",
+    placeholder="Example: What is Artificial Intelligence?",
+    label_visibility="collapsed"
 )
 
 analyze = st.button(
@@ -88,14 +161,13 @@ if question:
     if detect_false_premise(question):
 
         st.error(
-            "⚠ False Premise Detected\n\n"
+            "⚠️ False Premise Detected\n\n"
             "The question appears to contain an invalid assumption."
         )
         
     if analyze and question:
 
         engine = RetrievalEngine()
-    
         sources = engine.retrieve(question)
     
         reference_text = SourceAgreement.merged_text(
@@ -111,36 +183,25 @@ if question:
         )
     
         retrieval_answer = f"""
-    
         After comparing multiple reliable sources,
-        
         {reference_text[:1200]}
-        
         """
+        
         basic_eval = ReliabilityEngine.evaluate(
-
         basic_answer,
-
         reference_text
-
         )
 
         retrieval_eval = ReliabilityEngine.evaluate(
-    
             retrieval_answer,
-    
             reference_text
-    
         )
     
         score_basic = basic_eval["final"]
-    
         score_retrieval = retrieval_eval["final"]
     
         if score_retrieval > score_basic:
-    
             winner = "🌐 Retrieval AI"
-    
             reason = (
                 "Retrieval AI is better grounded in "
                 "external evidence."
@@ -149,7 +210,6 @@ if question:
         else:
     
             winner = "🤖 Baseline AI"
-    
             reason = (
                 "Baseline answer aligned more closely "
                 "with retrieved evidence."
@@ -158,7 +218,6 @@ if question:
         st.divider()
     
         m1, m2, m3, m4 = st.columns(4)
-    
         m1.metric(
             "Overall Reliability",
             f"{retrieval_eval['final']}%"

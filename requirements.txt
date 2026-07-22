@@ -3,6 +3,7 @@ pandas
 numpy
 matplotlib
 scikit-learn
-wikipediarequests
+wikipedia
+requests
 reportlab
 google-genai

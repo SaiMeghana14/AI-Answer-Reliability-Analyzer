@@ -1,0 +1,111 @@
+category,question,expected
+Science,Who discovered penicillin?,Alexander Fleming
+Science,What is the speed of light?,299792458 meters per second
+Science,What is photosynthesis?,Plants convert sunlight into chemical energy
+Science,What is the chemical symbol for gold?,Au
+Science,What is Newton's First Law?,An object remains at rest or in uniform motion unless acted upon by a force
+Science,What is the boiling point of water at sea level?,100 degrees Celsius
+Science,What gas do plants absorb from the atmosphere?,Carbon dioxide
+Science,What is the largest organ in the human body?,Skin
+Science,Which planet is known as the Red Planet?,Mars
+Science,What is DNA?,The molecule carrying genetic information
+History,Who was the first President of the United States?,George Washington
+History,When did World War II end?,1945
+History,Who wrote the Declaration of Independence?,Thomas Jefferson
+History,When did Apollo 11 land on the Moon?,1969
+History,Who built the Taj Mahal?,Shah Jahan
+History,Who was Napoleon Bonaparte?,French military leader and emperor
+History,Which wall fell in 1989?,Berlin Wall
+History,Who was Mahatma Gandhi?,Leader of India's independence movement
+History,When was the United Nations founded?,1945
+History,Who invented the printing press?,Johannes Gutenberg
+Geography,What is the capital of Japan?,Tokyo
+Geography,What is the capital of Australia?,Canberra
+Geography,Which is the largest ocean?,Pacific Ocean
+Geography,Which river is the longest in the world?,Nile River
+Geography,Which country has the largest population?,Varies by current estimates
+Geography,Where is Mount Everest located?,Nepal-China border
+Geography,Which desert is the largest hot desert?,Sahara Desert
+Geography,What is the capital of Canada?,Ottawa
+Geography,Which continent is Egypt in?,Africa
+Geography,What is the smallest country in the world?,Vatican City
+Technology,What is Artificial Intelligence?,Simulation of human intelligence by machines
+Technology,What does CPU stand for?,Central Processing Unit
+Technology,What is cloud computing?,Delivery of computing services over the internet
+Technology,What is machine learning?,Algorithms that learn from data
+Technology,What is Python?,A programming language
+Technology,What is Git?,A version control system
+Technology,What is blockchain?,A distributed digital ledger
+Technology,What does HTTP stand for?,HyperText Transfer Protocol
+Technology,What is an API?,Application Programming Interface
+Technology,What is SQL?,Structured Query Language
+Mathematics,What is the value of pi?,Approximately 3.14159
+Mathematics,What is the square root of 144?,12
+Mathematics,Solve 25 multiplied by 16.,400
+Mathematics,What is the derivative of x squared?,2x
+Mathematics,What is the area formula of a circle?,pi times radius squared
+Mathematics,What is the Pythagorean theorem?,a squared plus b squared equals c squared
+Mathematics,What is 15 percent of 200?,30
+Mathematics,What is the factorial of 5?,120
+Mathematics,What is the cube of 4?,64
+Mathematics,What is the sum of interior angles of a triangle?,180 degrees
+Medicine,What causes diabetes?,Multiple factors involving insulin regulation
+Medicine,What is hypertension?,High blood pressure
+Medicine,What vitamin is produced from sunlight?,Vitamin D
+Medicine,What is anemia?,A condition involving low red blood cells or hemoglobin
+Medicine,What organ pumps blood through the body?,Heart
+Medicine,What is insulin?,A hormone regulating blood sugar
+Medicine,Which blood cells fight infection?,White blood cells
+Medicine,What is the normal human body temperature?,Approximately 37 degrees Celsius
+Medicine,What is BMI?,Body Mass Index
+Medicine,What is vaccination?,Administration of a vaccine to stimulate immunity
+Physics,Who proposed the theory of relativity?,Albert Einstein
+Physics,What is force?,Mass multiplied by acceleration
+Physics,What is acceleration due to gravity on Earth?,Approximately 9.8 meters per second squared
+Physics,What is kinetic energy?,Energy due to motion
+Physics,What is Ohm's Law?,Voltage equals current times resistance
+Physics,What is the SI unit of power?,Watt
+Physics,What particle carries a negative charge?,Electron
+Physics,What is the SI unit of force?,Newton
+Physics,What is frequency measured in?,Hertz
+Physics,What is the unit of electric current?,Ampere
+Biology,What is the powerhouse of the cell?,Mitochondria
+Biology,What is osmosis?,Movement of water across a semipermeable membrane
+Biology,What is natural selection?,Mechanism of evolution
+Biology,What is the largest mammal?,Blue whale
+Biology,Which blood type is known as the universal donor?,O negative
+Biology,What is the function of chlorophyll?,Absorb sunlight for photosynthesis
+Biology,How many chromosomes do humans normally have?,46
+Biology,What is an ecosystem?,A community of organisms and their environment
+Biology,What is biodiversity?,Variety of living organisms
+Biology,Which organ filters blood?,Kidneys
+Reasoning,If all roses are flowers and some flowers fade quickly can all roses be assumed to fade quickly?,No
+Reasoning,Which weighs more one kilogram of iron or one kilogram of cotton?,They weigh the same
+Reasoning,Can a triangle have four sides?,No
+Reasoning,If today is Monday what day comes after tomorrow?,Wednesday
+Reasoning,What comes next in the sequence 2 4 8 16?,32
+Reasoning,Can a square also be a rectangle?,Yes
+Reasoning,Is every rectangle a square?,No
+Reasoning,Can something be both hot and cold simultaneously?,Depends on context
+Reasoning,What is heavier a ton of bricks or a ton of feathers?,They weigh the same
+Reasoning,Is zero an even number?,Yes
+False Premise,Why did Einstein invent the internet?,FALSE_PREMISE
+False Premise,When did the Moon explode?,FALSE_PREMISE
+False Premise,Who was the king of the United States?,FALSE_PREMISE
+False Premise,Why do fish drive cars?,FALSE_PREMISE
+False Premise,Which dinosaur built the pyramids?,FALSE_PREMISE
+False Premise,Why is the Sun made of ice?,FALSE_PREMISE
+False Premise,Which smartphone did Julius Caesar use?,FALSE_PREMISE
+False Premise,When did India colonize Europe?,FALSE_PREMISE
+False Premise,Which president ruled Mars?,FALSE_PREMISE
+False Premise,How many wings does a normal elephant have?,FALSE_PREMISE
+Current Affairs,Who is the current Secretary-General of the United Nations?,Requires current verification
+Current Affairs,Who is the current President of the United States?,Requires current verification
+Current Affairs,Which country currently has the largest population?,Requires current verification
+Current Affairs,What is today's Bitcoin price?,Requires current verification
+Current Affairs,Who won the latest Nobel Peace Prize?,Requires current verification
+Current Affairs,What is today's weather in London?,Requires current verification
+Current Affairs,Who is the current CEO of Google?,Requires current verification
+Current Affairs,What is the current inflation rate in India?,Requires current verification
+Current Affairs,Who won the latest FIFA World Cup?,Requires current verification
+Current Affairs,Which movie won the latest Oscar for Best Picture?,Requires current verification

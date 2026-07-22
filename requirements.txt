@@ -6,4 +6,3 @@ scikit-learn
 wikipedia
 requests
 reportlab
-google-genai
